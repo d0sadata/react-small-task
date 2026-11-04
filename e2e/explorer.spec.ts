@@ -7,7 +7,12 @@ test('filters, sorts and resets the supplied products', async ({ page }) => {
 
   const search = page.getByRole('searchbox', { name: 'Filter by name' })
   await search.fill('mouse')
-  await expect(page.getByText('No products match your filters.')).toBeVisible()
+  await expect(page.locator('.empty-state')).toHaveText(
+    'No products match your filters.',
+  )
+  await expect(page.getByRole('status')).toHaveText(
+    'No products match your filters.',
+  )
   await search.fill('Mouse')
   await expect(page.getByRole('rowheader')).toHaveText(['Wireless Mouse'])
 

@@ -1,7 +1,15 @@
-import { render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
-import { ProductExplorer } from './ProductExplorer'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { ANNOUNCEMENT_DELAY_MS, ProductExplorer } from './ProductExplorer'
+
+// Visible text only; the screen-reader status region may repeat it.
+const visibleText = (text: string) =>
+  screen.getByText(text, { ignore: 'script, style, [role="status"]' })
+
+afterEach(() => {
+  vi.useRealTimers()
+})
 
 describe('ProductExplorer', () => {
   it('shows the supplied products with their details and stock status', () => {
@@ -15,9 +23,9 @@ describe('ProductExplorer', () => {
     const keyboardRow = screen.getByRole('row', { name: /Mechanical Keyboard/ })
     expect(within(keyboardRow).getByText('Out of stock')).toBeInTheDocument()
     expect(keyboardRow).toHaveClass('out-of-stock')
-    expect(screen.getByText('Showing 5 of 5 products')).toHaveAttribute(
-      'aria-live',
-      'polite',
+    expect(visibleText('Showing 5 of 5 products')).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Showing 5 of 5 products',
     )
   })
 
@@ -29,9 +37,7 @@ describe('ProductExplorer', () => {
     expect(search).toHaveAccessibleDescription('Search is case-sensitive.')
     expect(search).toHaveAttribute('maxLength', '100')
     await user.type(search, 'mouse')
-    expect(
-      screen.getByText('No products match your filters.'),
-    ).toBeInTheDocument()
+    expect(visibleText('No products match your filters.')).toBeInTheDocument()
     await user.clear(search)
     await user.type(search, 'Mouse')
     expect(
@@ -40,7 +46,7 @@ describe('ProductExplorer', () => {
     expect(
       screen.queryByRole('rowheader', { name: 'Mechanical Keyboard' }),
     ).not.toBeInTheDocument()
-    expect(screen.getByText('Showing 1 of 5 products')).toBeInTheDocument()
+    expect(visibleText('Showing 1 of 5 products')).toBeInTheDocument()
   })
 
   it('combines category and stock filters and resets every control', async () => {
@@ -106,12 +112,36 @@ describe('ProductExplorer', () => {
     ])
   })
 
+  it('announces one result summary after typing pauses', () => {
+    vi.useFakeTimers()
+    render(<ProductExplorer />)
+    const status = screen.getByRole('status')
+    const search = screen.getByRole('searchbox', { name: 'Filter by name' })
+
+    fireEvent.change(search, { target: { value: 'M' } })
+    fireEvent.change(search, { target: { value: 'Mou' } })
+    act(() => {
+      vi.advanceTimersByTime(ANNOUNCEMENT_DELAY_MS - 1)
+    })
+    expect(status).toHaveTextContent('Showing 5 of 5 products')
+
+    act(() => {
+      vi.advanceTimersByTime(1)
+    })
+    expect(status).toHaveTextContent('Showing 1 of 5 products')
+
+    fireEvent.change(search, { target: { value: 'zzz' } })
+    act(() => {
+      vi.advanceTimersByTime(ANNOUNCEMENT_DELAY_MS)
+    })
+    expect(status).toHaveTextContent('No products match your filters.')
+    expect(screen.getAllByRole('status')).toHaveLength(1)
+  })
+
   it('handles an empty product list and unavailable prices', () => {
     const { rerender } = render(<ProductExplorer products={[]} />)
-    expect(
-      screen.getByText('No products match your filters.'),
-    ).toBeInTheDocument()
-    expect(screen.getByText('Showing 0 of 0 products')).toBeInTheDocument()
+    expect(visibleText('No products match your filters.')).toBeInTheDocument()
+    expect(visibleText('Showing 0 of 0 products')).toBeInTheDocument()
 
     rerender(
       <ProductExplorer
