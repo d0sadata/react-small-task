@@ -18,3 +18,9 @@ repository commit predates this convention; history is not rewritten.
 Run the checks listed in the [README](README.md) before opening a pull request.
 The Markdown lint configuration exempts code-block line length so the supplied
 product data can remain in its original form.
+
+## Line endings
+
+Text files use LF in the repository and working tree. Windows `.bat` and
+`.cmd` scripts use CRLF in the working tree. Git attributes and EditorConfig
+apply this policy without changing your global Git settings.
