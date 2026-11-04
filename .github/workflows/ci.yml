@@ -2,24 +2,33 @@ name: CI
 
 on:
   push:
+    branches: [main]
   pull_request:
 
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  HUSKY: 0
+
 jobs:
   quality:
+    name: Quality (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
-    env:
-      HUSKY: 0
-      CI: true
+    strategy:
+      fail-fast: false
+      matrix:
+        # Lowest supported LTS lines from package.json engines, plus .nvmrc.
+        node: ['22.22.2', '24.15.0', '26.13.0']
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          fetch-depth: 0
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
+          node-version: ${{ matrix.node }}
           cache: npm
       - run: npm ci
       - run: npm run lint
@@ -28,8 +37,41 @@ jobs:
       - run: npm run typecheck
       - run: npm run test:coverage
       - run: npm run build
-      - run: npx playwright install --with-deps chromium
+
+  e2e:
+    name: Browser and accessibility tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - id: playwright
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        id: browsers
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      - if: steps.browsers.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+      - if: steps.browsers.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
       - run: npm run test:e2e
-      - name: Check pull request commits
-        if: github.event_name == 'pull_request'
-        run: npx --no-install commitlint --from "${{ github.event.pull_request.base.sha }}" --to "${{ github.event.pull_request.head.sha }}" --verbose
+
+  commits:
+    name: Conventional Commits
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx --no-install commitlint --from "${{ github.event.pull_request.base.sha }}" --to "${{ github.event.pull_request.head.sha }}" --verbose
