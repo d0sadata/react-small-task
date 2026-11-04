@@ -7,7 +7,7 @@ import {
 
 interface ProductFiltersProps {
   products: readonly Product[]
-  filters: Filters
+  filters: Readonly<Filters>
   onChange: (filters: Filters) => void
 }
 
@@ -15,7 +15,7 @@ export function ProductFilters({
   products,
   filters,
   onChange,
-}: ProductFiltersProps) {
+}: Readonly<ProductFiltersProps>) {
   const categories = getCategories(products)
   const searchId = useId()
 
