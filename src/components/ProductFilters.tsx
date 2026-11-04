@@ -16,7 +16,7 @@ export function ProductFilters({
   products,
   filters,
   onChange,
-}: Readonly<ProductFiltersProps>) {
+}: ProductFiltersProps) {
   const categories = getCategories(products)
   const searchId = useId()
 
