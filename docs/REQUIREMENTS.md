@@ -16,8 +16,6 @@ No need for routing or global state libraries.
 
 Use the following hard coded product data in your component:
 
-<!-- markdownlint-disable MD013 -->
-
 ```js
 const PRODUCTS = [
   { id: 1, name: "Wireless Mouse", category: "Accessories", price: 19.99, inStock: true },
@@ -27,8 +25,6 @@ const PRODUCTS = [
   { id: 5, name: "Laptop Stand", category: "Accessories", price: 39.99, inStock: false },
 ];
 ```
-
-<!-- markdownlint-enable MD013 -->
 
 Build a simple interface that:
 
