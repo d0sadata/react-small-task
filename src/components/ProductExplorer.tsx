@@ -1,33 +1,28 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import {
+  DEFAULT_FILTERS,
   filterAndSortProducts,
   PRODUCTS,
+  type FilterState,
   type Product,
-  type ProductFilters,
 } from '../domain/products'
-import { ProductFilters as ProductFiltersView } from './ProductFilters'
+import { ProductFilters } from './ProductFilters'
 import { ProductTable } from './ProductTable'
-
-const initialFilters: ProductFilters = {
-  name: '',
-  category: '',
-  inStockOnly: false,
-  sortOrder: 'none',
-}
 
 interface ProductExplorerProps {
   products?: readonly Product[]
 }
 
 export function ProductExplorer({ products = PRODUCTS }: ProductExplorerProps) {
-  const [filters, setFilters] = useState(initialFilters)
-  const visibleProducts = useMemo(
-    () => filterAndSortProducts(products, filters),
-    [products, filters],
-  )
+  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
+  const visibleProducts = filterAndSortProducts(products, filters)
+
+  function updateFilters(patch: Partial<FilterState>) {
+    setFilters((current) => ({ ...current, ...patch }))
+  }
 
   function resetFilters() {
-    setFilters(initialFilters)
+    setFilters(DEFAULT_FILTERS)
   }
 
   return (
@@ -51,10 +46,10 @@ export function ProductExplorer({ products = PRODUCTS }: ProductExplorerProps) {
           </button>
         </div>
 
-        <ProductFiltersView
+        <ProductFilters
           products={products}
           filters={filters}
-          onChange={setFilters}
+          onChange={updateFilters}
         />
 
         {visibleProducts.length > 0 ? (

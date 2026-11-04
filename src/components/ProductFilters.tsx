@@ -1,14 +1,15 @@
 import { useId } from 'react'
 import {
   getCategories,
+  isSortOrder,
+  type FilterState,
   type Product,
-  type ProductFilters as Filters,
 } from '../domain/products'
 
 interface ProductFiltersProps {
   products: readonly Product[]
-  filters: Readonly<Filters>
-  onChange: (filters: Filters) => void
+  filters: Readonly<FilterState>
+  onChange: (patch: Partial<FilterState>) => void
 }
 
 export function ProductFilters({
@@ -33,9 +34,7 @@ export function ProductFilters({
           value={filters.name}
           maxLength={100}
           aria-describedby={`${searchId}-hint`}
-          onChange={(event) =>
-            onChange({ ...filters, name: event.currentTarget.value })
-          }
+          onChange={(event) => onChange({ name: event.currentTarget.value })}
         />
         <span className="field-hint" id={`${searchId}-hint`}>
           Search is case-sensitive.
@@ -47,7 +46,7 @@ export function ProductFilters({
         <select
           value={filters.category}
           onChange={(event) =>
-            onChange({ ...filters, category: event.currentTarget.value })
+            onChange({ category: event.currentTarget.value })
           }
         >
           <option value="">All categories</option>
@@ -64,7 +63,7 @@ export function ProductFilters({
           type="checkbox"
           checked={filters.inStockOnly}
           onChange={(event) =>
-            onChange({ ...filters, inStockOnly: event.currentTarget.checked })
+            onChange({ inStockOnly: event.currentTarget.checked })
           }
         />
         <span>In stock only</span>
@@ -76,14 +75,7 @@ export function ProductFilters({
           value={filters.sortOrder}
           onChange={(event) => {
             const sortOrder = event.currentTarget.value
-            if (
-              sortOrder !== 'none' &&
-              sortOrder !== 'ascending' &&
-              sortOrder !== 'descending'
-            ) {
-              throw new Error(`Unknown price sort order: ${sortOrder}`)
-            }
-            onChange({ ...filters, sortOrder })
+            if (isSortOrder(sortOrder)) onChange({ sortOrder })
           }}
         >
           <option value="none">Default order</option>

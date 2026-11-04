@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
+  DEFAULT_FILTERS,
   filterAndSortProducts,
   formatPrice,
   getCategories,
+  isSortOrder,
   type Product,
-  type ProductFilters,
 } from './products'
 
 const mouse: Product = {
@@ -36,12 +37,7 @@ const hub: Product = {
   inStock: true,
 }
 const products = [mouse, keyboard, monitor, hub]
-const defaults: ProductFilters = {
-  name: '',
-  category: '',
-  inStockOnly: false,
-  sortOrder: 'none',
-}
+const defaults = DEFAULT_FILTERS
 
 describe('getCategories', () => {
   it('returns distinct categories in alphabetical order', () => {
@@ -136,6 +132,16 @@ describe('filterAndSortProducts', () => {
 
   it('returns an empty list for no products', () => {
     expect(filterAndSortProducts([], defaults)).toEqual([])
+  })
+})
+
+describe('isSortOrder', () => {
+  it.each(['none', 'ascending', 'descending'])('accepts %s', (value) => {
+    expect(isSortOrder(value)).toBe(true)
+  })
+
+  it.each(['', 'asc', 'Ascending', 'price'])('rejects %j', (value) => {
+    expect(isSortOrder(value)).toBe(false)
   })
 })
 

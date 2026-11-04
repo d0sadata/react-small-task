@@ -44,13 +44,26 @@ export const PRODUCTS: readonly Product[] = [
   },
 ]
 
-export type SortOrder = 'none' | 'ascending' | 'descending'
+export const SORT_ORDERS = ['none', 'ascending', 'descending'] as const
 
-export interface ProductFilters {
+export type SortOrder = (typeof SORT_ORDERS)[number]
+
+export function isSortOrder(value: string): value is SortOrder {
+  return (SORT_ORDERS as readonly string[]).includes(value)
+}
+
+export interface FilterState {
   name: string
   category: string
   inStockOnly: boolean
   sortOrder: SortOrder
+}
+
+export const DEFAULT_FILTERS: Readonly<FilterState> = {
+  name: '',
+  category: '',
+  inStockOnly: false,
+  sortOrder: 'none',
 }
 
 const priceFormatter = new Intl.NumberFormat('en-US', {
@@ -70,7 +83,7 @@ export function getCategories(products: readonly Product[]): string[] {
 
 export function filterAndSortProducts(
   products: readonly Product[],
-  filters: ProductFilters,
+  filters: Readonly<FilterState>,
 ): Product[] {
   const filtered = products.filter((product) => {
     const matchesName = product.name.includes(filters.name)
