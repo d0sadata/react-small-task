@@ -7,8 +7,10 @@ including its optional sorting and presentation improvements.
 
 ## Setup
 
-The application uses React, Vite, strict TypeScript, and npm.
-Node.js 26.13.0 is pinned in `.nvmrc`. With an initialized version manager:
+The application uses React, Vite, strict TypeScript, and npm. It is developed
+on Node.js 26.13.0 (pinned in `.nvmrc`). The development toolchain supports
+Node.js 22.22.2+, 24.15.0+, or 26+, the narrowest range its dependencies
+declare. With an initialized version manager:
 
 ```sh
 fnm install 26.13.0
