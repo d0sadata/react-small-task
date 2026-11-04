@@ -1,0 +1,6 @@
+docs/REQUIREMENTS.md
+LICENSE
+package-lock.json
+coverage
+playwright-report
+test-results
