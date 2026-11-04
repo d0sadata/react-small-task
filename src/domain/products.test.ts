@@ -117,6 +117,15 @@ describe('filterAndSortProducts', () => {
       { ...mouse, id: 7, price: Number.POSITIVE_INFINITY },
     ]
     const input = [invalid[0], monitor, invalid[1], mouse, invalid[2]]
+    const validBeforeInvalid = [monitor, invalid[0]]
+
+    expect(
+      filterAndSortProducts(validBeforeInvalid, {
+        ...defaults,
+        sortOrder: 'ascending',
+      }),
+    ).toEqual(validBeforeInvalid)
+
     expect(
       filterAndSortProducts(input, { ...defaults, sortOrder: 'ascending' }).map(
         ({ id }) => id,
